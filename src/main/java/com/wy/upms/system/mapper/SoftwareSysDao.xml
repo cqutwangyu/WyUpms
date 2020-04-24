@@ -1,0 +1,124 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.wy.upms.system.mapper.SoftwareSysDao">
+    <insert id="insertSystemInfo">
+        insert into b_system (sys_name)
+        value (#{sysName})
+    </insert>
+    <insert id="insertRoleInfo">
+        insert into b_role (sys_id,role_name)
+        value (#{sysId},#{roleName})
+    </insert>
+    <insert id="insertMenuInfo">
+        insert into b_system_menu_tree (sys_id,menu_name,menu_level,menu_parent_id)
+        value (#{sysId},#{menuName},#{menuLevel},#{menuParentId})
+    </insert>
+    <insert id="insertPermissionInfo">
+        insert into b_permission (user_id,role_id,sys_id,dep_id,menu_id,menu_parent_id,query,edit,export,impower)
+        value (#{userId},#{roleId},#{sysId},#{depId},#{menuId},#{menuParentId},#{query},#{edit},#{export},#{impower})
+    </insert>
+    <insert id="insertDepartmentInfo">
+        insert into b_department (sys_id,dep_name)
+        value (#{sysId},#{depName})
+    </insert>
+    <update id="updateRole">
+        update b_role set sys_id = #{sysId},role_name = #{roleName}
+        where flow_id = #{flowId}
+    </update>
+    <update id="updateDepartmentInfo">
+        update b_department set sys_id = #{sysId},dep_name = #{depName}
+        where flow_id = #{flowId}
+    </update>
+    <update id="updateSoftwareSysInfo">
+        update b_system set sys_name = #{sysName}
+        where flow_id = #{flowId}
+    </update>
+    <update id="updateMenu">
+        update b_system_menu_tree set menu_name = #{menuName},menu_level = #{menuLevel},menu_parent_id = #{menuParentId}
+        where flow_id = #{flowId}
+    </update>
+    <delete id="deleteRoleById">
+        delete from b_role
+        where flow_id = #{roleId}
+    </delete>
+    <delete id="deleteDepartmentById">
+        delete from b_department
+        where flow_id = #{depId}
+    </delete>
+    <delete id="deleteSystemById">
+        delete from b_system
+        where flow_id = #{sysId}
+    </delete>
+    <delete id="deleteMenuById">
+        delete from b_system_menu_tree
+        where flow_id = #{menuId}
+    </delete>
+    <delete id="deletePermissionAndChildren">
+        delete from b_permission
+        where sys_id = #{sysId} and role_id = #{roleId}
+        and menu_id = #{menuId}
+    </delete>
+    <select id="selectAllRole" resultType="com.wy.upms.system.domain.RoleInfo">
+        select r.flow_id,sys_id,role_name,r.create_time,s.sys_name
+        from b_role r inner join b_system s on r.sys_id = s.flow_id
+    </select>
+    <select id="selectAllDepartment" resultType="com.wy.upms.system.domain.DepartmentInfo">
+        select d.flow_id,sys_id,dep_name,d.create_time,s.sys_name
+        from b_department d inner join b_system s on d.sys_id = s.flow_id
+    </select>
+    <select id="selectAllSystem" resultType="com.wy.upms.system.domain.SoftwareSysInfo">
+        select flow_id,sys_name,create_time
+        from b_system
+    </select>
+    <select id="selectMenuListByParentId" resultType="com.wy.upms.system.domain.MenuInfo">
+        select
+            m.flow_id,
+            m.sys_id,
+            menu_name,
+            menu_level,
+            m.menu_parent_id,
+            m.create_time,
+            QUERY,
+            edit,
+            export,
+            impower
+        from b_system_menu_tree m left join b_permission p ON m.flow_id = p.menu_id
+        AND m.sys_id = p.sys_id
+        where m.menu_parent_id = #{menuParentId}
+        order by m.flow_id
+    </select>
+    <select id="selectMenuRootNodeList" resultType="com.wy.upms.system.domain.MenuInfo">
+        SELECT DISTINCT
+        m.flow_id,
+        m.sys_id,
+        menu_name,
+        menu_level,
+        m.menu_parent_id,
+        m.create_time,
+        QUERY,
+        edit,
+        export,
+        impower
+        FROM
+        b_system_menu_tree m
+        LEFT JOIN (
+        SELECT
+        *
+        FROM
+        b_permission
+        where 1=0
+        <if test="roleId != null">or role_id = #{roleId}</if>
+        <if test="userId != null">or user_id = #{userId}</if>
+        <if test="depId != null">or dep_id = #{depId}</if>
+        ) p ON m.flow_id = p.menu_id
+        AND m.sys_id = p.sys_id
+        WHERE
+        m.sys_id = #{sysId} and menu_level = 0
+        order by m.flow_id
+    </select>
+    <select id="selectPermissionInfoByMenuId" resultType="com.wy.upms.system.domain.PermissionInfo">
+        select flow_id,user_id,role_id,sys_id,dep_id,menu_id,menu_parent_id,query,edit,export,impower,create_time
+         from b_permission
+         where menu_parent_id = #{menuId}
+    </select>
+</mapper>
