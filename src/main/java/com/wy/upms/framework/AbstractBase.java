@@ -1,14 +1,12 @@
 package com.wy.upms.framework;
 
-import com.wy.upms.user.domain.UserInfo;
-import com.wy.upms.user.mapper.UserDao;
-import com.wy.upms.utils.TokenUtil;
+import com.wy.sso.user.domain.UserInfo;
+import com.wy.upms.redis.RedisCache;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
 
 /**
  * @author wangyu4017@sefonsoft.com
@@ -21,24 +19,21 @@ public class AbstractBase {
     protected final Logger log = LoggerFactory.getLogger(this.getClass());
 
     @Autowired
-    private UserDao userDao;
+    private RedisCache redisCache;
 
     @Autowired
     protected HttpServletRequest request;
 
     protected UserInfo currentUser() {
-        return getUser(getUserName());
+        return redisCache.getCacheObject(getToken());
     }
 
     protected String getToken() {
         return request.getHeader("X-Token");
     }
 
-    protected UserInfo getUser(String userName) {
-        return userDao.selectUserByName(userName);
-    }
 
     protected String getUserName() {
-        return TokenUtil.getUserName(getToken());
+        return currentUser().getUserName();
     }
 }
