@@ -7,8 +7,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.Objects;
-
 /**
  * @author wangyu
  * @title: SystemContoller
@@ -145,6 +143,21 @@ public class SoftwareSysController extends AbstractController {
     public Object listMenu(MenuQueryParems menuQueryParems) {
         try {
             return succeed(softwareSystemService.listMenu(menuQueryParems));
+        } catch (Exception e) {
+            return failure(e);
+        }
+    }
+
+    /**
+     * 获取路由信息
+     *
+     * @return
+     */
+    @GetMapping("/getRouters")
+    @ResponseBody
+    public Object getRouters( ) {
+        try {
+            return succeed(softwareSystemService.getRouters());
         } catch (Exception e) {
             return failure(e);
         }

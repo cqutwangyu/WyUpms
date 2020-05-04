@@ -52,4 +52,6 @@ public interface SoftwareSysDao {
     int deletePermissionAndChildren(Integer sysId, Integer roleId, Integer menuId);
 
     List<PermissionInfo> selectPermissionInfoByMenuId(Integer menuId);
+
+    List<MenuInfo> selectAllMenu();
 }

@@ -126,4 +126,10 @@ public interface SoftwareSystemService {
      * @return
      */
     Object listMenu(MenuQueryParems menuQueryParems);
+
+    /**
+     * 获取路由信息
+     * @return
+     */
+    Object getRouters();
 }

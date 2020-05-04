@@ -2,11 +2,13 @@ package com.wy.upms.system.service;
 
 import com.wy.upms.framework.AbstractService;
 import com.wy.upms.system.domain.*;
+import com.wy.upms.system.domain.vo.RouterVo;
 import com.wy.upms.system.mapper.SoftwareSysDao;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
@@ -41,17 +43,17 @@ public class SoftwareSysServiceImpl extends AbstractService implements SoftwareS
     @Override
     @Transactional
     public Object putPermission(PermissionInfo permissionInfo) throws Exception {
-        deletePermission(permissionInfo.getSysId(),permissionInfo.getRoleId(),permissionInfo.getMenuId());
+        deletePermission(permissionInfo.getSysId(), permissionInfo.getRoleId(), permissionInfo.getMenuId());
         return result(softwareSysDao.insertPermissionInfo(permissionInfo));
     }
 
-    private void deletePermission(Integer sysId,Integer roleId,Integer menuId) {
+    private void deletePermission(Integer sysId, Integer roleId, Integer menuId) {
         List<PermissionInfo> list = softwareSysDao.selectPermissionInfoByMenuId(menuId);
         for (PermissionInfo p : list) {
-            deletePermission(sysId,roleId,p.getMenuId());
-            softwareSysDao.deletePermissionAndChildren(sysId,roleId,p.getMenuId());
+            deletePermission(sysId, roleId, p.getMenuId());
+            softwareSysDao.deletePermissionAndChildren(sysId, roleId, p.getMenuId());
         }
-        softwareSysDao.deletePermissionAndChildren(sysId,roleId,menuId);
+        softwareSysDao.deletePermissionAndChildren(sysId, roleId, menuId);
     }
 
     @Override
@@ -117,11 +119,71 @@ public class SoftwareSysServiceImpl extends AbstractService implements SoftwareS
     @Override
     public Object listMenu(MenuQueryParems menuQueryParems) {
         List<MenuInfo> rootNodeList = softwareSysDao.selectMenuRootNodeList(menuQueryParems);
-        setChildren(rootNodeList, menuQueryParems);
+        buildMenuTree(rootNodeList, menuQueryParems);
         return rootNodeList;
     }
 
-    private void setChildren(List<MenuInfo> parentNodeList, MenuQueryParems menuQueryParems) {
+    @Override
+    public Object getRouters() {
+        List<MenuInfo> menuList = softwareSysDao.selectAllMenu();
+        List<MenuInfo> menuTreeList = buildMenuTree(menuList);
+        List<RouterVo> routerVoList = buildRouters(menuTreeList);
+        return routerVoList;
+    }
+
+
+    private List<RouterVo> buildRouters(List<MenuInfo> menuList) {
+        List<RouterVo> routerVoList = new ArrayList<>();
+        for (MenuInfo menu : menuList) {
+            RouterVo routerVo = new RouterVo(menu);
+            routerVo.setChildren(buildRouters(menu.getChildren()));
+            routerVoList.add(routerVo);
+        }
+        return routerVoList.isEmpty() ? null : routerVoList;
+    }
+
+    /**
+     * 遍历根节点
+     *
+     * @param menuList
+     * @return
+     */
+    private List<MenuInfo> buildMenuTree(List<MenuInfo> menuList) {
+        List<MenuInfo> nodeRootList = new ArrayList<>();
+        for (MenuInfo menu : menuList) {
+            if (menu.getMenuLevel() == 0) {
+                menu.setChildren(getChildren(menuList, menu.getFlowId()));
+                nodeRootList.add(menu);
+            }
+        }
+        return nodeRootList;
+    }
+
+    /**
+     * 获取子节点
+     *
+     * @param menuList
+     * @param parentId
+     * @return
+     */
+    private List<MenuInfo> getChildren(List<MenuInfo> menuList, Integer parentId) {
+        List<MenuInfo> childList = new ArrayList<>();
+        for (MenuInfo menu : menuList) {
+            if (menu.getMenuParentId().equals(parentId)) {
+                menu.setChildren(getChildren(menuList, menu.getFlowId()));
+                childList.add(menu);
+            }
+        }
+        return childList;
+    }
+
+    /**
+     * 权限管理系统中，授权页面树形节点构造
+     *
+     * @param parentNodeList
+     * @param menuQueryParems
+     */
+    private void buildMenuTree(List<MenuInfo> parentNodeList, MenuQueryParems menuQueryParems) {
         for (MenuInfo node : parentNodeList) {
             menuQueryParems.setMenuParentId(node.getFlowId());
             List<MenuInfo> menuNodeInfos = softwareSysDao.selectMenuListByParentId(menuQueryParems);
@@ -137,7 +199,7 @@ public class SoftwareSysServiceImpl extends AbstractService implements SoftwareS
             if (Objects.isNull(menuNodeInfos)) {
                 return;
             } else {
-                setChildren(menuNodeInfos, menuQueryParems);
+                buildMenuTree(menuNodeInfos, menuQueryParems);
             }
         }
 

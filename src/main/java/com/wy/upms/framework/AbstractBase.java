@@ -24,6 +24,10 @@ public class AbstractBase {
     @Autowired
     protected HttpServletRequest request;
 
+    protected boolean isAdmin() {
+        return true;
+    }
+
     protected UserInfo currentUser() {
         return redisCache.getCacheObject(getToken());
     }

@@ -121,4 +121,19 @@
          from b_permission
          where menu_parent_id = #{menuId}
     </select>
+    <select id="selectAllMenu" resultType="com.wy.upms.system.domain.MenuInfo">
+        SELECT
+            flow_id,
+            sys_id,
+            menu_name,
+            menu_level,
+            path,
+            component,
+            icon,
+            menu_parent_id,
+            order_num,
+            create_time
+        FROM
+            b_system_menu_tree
+    </select>
 </mapper>

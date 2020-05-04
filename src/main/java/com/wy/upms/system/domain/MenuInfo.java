@@ -19,9 +19,45 @@ public class MenuInfo {
     private Integer flowId;
     private Integer sysId;
     private String menuName;
+    private String path;
+    private String component;
+    private String icon;
+    private Integer orderNum;
     private Integer menuLevel;
     private Integer menuParentId;
     private String createTime;
+
+    public String getPath() {
+        return path;
+    }
+
+    public void setPath(String path) {
+        this.path = path;
+    }
+
+    public String getComponent() {
+        return component;
+    }
+
+    public void setComponent(String component) {
+        this.component = component;
+    }
+
+    public String getIcon() {
+        return icon;
+    }
+
+    public void setIcon(String icon) {
+        this.icon = icon;
+    }
+
+    public Integer getOrderNum() {
+        return orderNum;
+    }
+
+    public void setOrderNum(Integer orderNum) {
+        this.orderNum = orderNum;
+    }
 
     public Boolean getQuery() {
         return query;
