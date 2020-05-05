@@ -136,10 +136,16 @@ public class SoftwareSysServiceImpl extends AbstractService implements SoftwareS
         List<RouterVo> routerVoList = new ArrayList<>();
         for (MenuInfo menu : menuList) {
             RouterVo routerVo = new RouterVo(menu);
+            if (menu.getMenuLevel().equals(0)) {
+                routerVo.setAlwaysShow(true);
+                routerVo.setRedirect("noRedirect");
+            } else {
+                routerVo.setAlwaysShow(false);
+            }
             routerVo.setChildren(buildRouters(menu.getChildren()));
             routerVoList.add(routerVo);
         }
-        return routerVoList.isEmpty() ? null : routerVoList;
+        return routerVoList;
     }
 
     /**
