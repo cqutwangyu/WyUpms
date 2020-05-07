@@ -1,12 +1,16 @@
 package com.wy.upms.user.service;
 
 import com.wy.sso.user.domain.UserInfo;
+import com.wy.sso.user.domain.UserPermissionInfo;
 import com.wy.upms.framework.AbstractService;
+import com.wy.sso.user.domain.RoleInfo;
+import com.wy.upms.system.mapper.SoftwareSysDao;
 import com.wy.upms.user.mapper.UserDao;
 import com.wy.upms.utils.TokenUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.util.List;
 import java.util.Objects;
 
 /**
@@ -21,6 +25,9 @@ public class UserServiceImpl extends AbstractService implements UserService {
 
     @Autowired
     private UserDao userDao;
+
+    @Autowired
+    private SoftwareSysDao softwareSysDao;
 
     @Override
     public Object login(UserInfo user) {
@@ -45,7 +52,14 @@ public class UserServiceImpl extends AbstractService implements UserService {
 
     @Override
     public Object findAllUserInfo() {
-        return userDao.selectAllUser();
+        List<UserInfo> userInfos = userDao.selectAllUser();
+        for (UserInfo user : userInfos) {
+            List<RoleInfo> roleInfos = softwareSysDao.selectRoleByUser(user.getFlowId());
+            user.setRoles(roleInfos);
+            List<UserPermissionInfo> userPermissionInfos=softwareSysDao.selectPermissionInfoByUser(user.getFlowId());
+            user.setPermissionInfoList(userPermissionInfos);
+        }
+        return userInfos;
     }
 
     @Override

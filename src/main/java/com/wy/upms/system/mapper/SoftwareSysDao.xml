@@ -34,7 +34,17 @@
         where flow_id = #{flowId}
     </update>
     <update id="updateMenu">
-        update b_system_menu_tree set menu_name = #{menuName},menu_level = #{menuLevel},menu_parent_id = #{menuParentId}
+        update b_system_menu_tree
+        <set>
+            <if test="menuName != null and menuName != ''">menu_name = #{menuName},</if>
+            <if test="menuLevel != null and menuLevel != ''">menu_level = #{menuLevel},</if>
+            <if test="menuParentId != null and menuParentId != ''">menu_parent_id = #{menuParentId},</if>
+            <if test="path != null and path != ''">path = #{path},</if>
+            <if test="component != null and component != ''">component = #{component},</if>
+            <if test="orderNum != null and orderNum != ''">order_num = #{orderNum},</if>
+            <if test="perms != null and perms != ''">perms = #{perms},</if>
+            <if test="icon != null and icon != ''">icon = #{icon},</if>
+        </set>
         where flow_id = #{flowId}
     </update>
     <delete id="deleteRoleById">
@@ -58,7 +68,7 @@
         where sys_id = #{sysId} and role_id = #{roleId}
         and menu_id = #{menuId}
     </delete>
-    <select id="selectAllRole" resultType="com.wy.upms.system.domain.RoleInfo">
+    <select id="selectAllRole" resultType="com.wy.sso.user.domain.RoleInfo">
         select r.flow_id,sys_id,role_name,r.create_time,s.sys_name
         from b_role r inner join b_system s on r.sys_id = s.flow_id
     </select>
@@ -131,9 +141,42 @@
             component,
             icon,
             menu_parent_id,
+            perms,
             order_num,
             create_time
         FROM
             b_system_menu_tree
+        order by order_num
+    </select>
+    <select id="selectRoleByUser" resultType="com.wy.sso.user.domain.RoleInfo">
+        select r.flow_id,sys_id,role_name,r.create_time,s.sys_name
+        from b_role r inner join b_user_role ur on r.flow_id=ur.role_id inner join b_system s on r.sys_id=s.flow_id
+        where ur.user_id=#{flowId}
+    </select>
+    <select id="selectPermissionInfoByUser" resultType="com.wy.sso.user.domain.UserPermissionInfo">
+        select flow_id,user_id,role_id,sys_id,dep_id,menu_id,menu_parent_id,query,edit,export,impower,create_time
+        from b_permission p
+        where user_id=#{flowIds}
+    </select>
+    <select id="selectMenuByUser" resultType="com.wy.upms.system.domain.MenuInfo">
+        SELECT
+            m.flow_id,
+            m.sys_id,
+            m.menu_name,
+            m.menu_level,
+            m.path,
+            m.component,
+            m.icon,
+            m.menu_parent_id,
+            m.perms,
+            m.order_num,
+            m.create_time
+        FROM
+            b_user u inner join b_user_role ur on u.flow_id = ur.user_id
+            inner join b_role r on r.flow_id = ur.role_id
+            inner join b_permission p on r.flow_id = p.role_id
+            inner join b_system_menu_tree m on m.flow_id = p.menu_id
+        where
+            u.flow_id = #{flowId}
     </select>
 </mapper>

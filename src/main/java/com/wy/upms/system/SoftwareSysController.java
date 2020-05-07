@@ -1,5 +1,6 @@
 package com.wy.upms.system;
 
+import com.wy.sso.user.domain.RoleInfo;
 import com.wy.upms.framework.AbstractController;
 import com.wy.upms.system.domain.*;
 import com.wy.upms.system.service.SoftwareSystemService;
@@ -134,6 +135,20 @@ public class SoftwareSysController extends AbstractController {
 
     /**
      * 获取所有菜单
+     *
+     * @return
+     */
+    @GetMapping("/menu/getAll")
+    @ResponseBody
+    public Object getAll() {
+        try {
+            return succeed(softwareSystemService.getAllMenu());
+        } catch (Exception e) {
+            return failure(e);
+        }
+    }
+    /**
+     * 根据条件查询菜单及权限
      *
      * @param menuQueryParems
      * @return

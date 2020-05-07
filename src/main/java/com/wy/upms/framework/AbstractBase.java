@@ -1,5 +1,6 @@
 package com.wy.upms.framework;
 
+import com.wy.sso.user.domain.RoleInfo;
 import com.wy.sso.user.domain.UserInfo;
 import com.wy.upms.redis.RedisCache;
 import org.slf4j.Logger;
@@ -7,6 +8,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import javax.servlet.http.HttpServletRequest;
+import java.util.List;
 
 /**
  * @author wangyu4017@sefonsoft.com
@@ -25,7 +27,16 @@ public class AbstractBase {
     protected HttpServletRequest request;
 
     protected boolean isAdmin() {
-        return true;
+        for (RoleInfo roleInfo : getRoles()) {
+            if (roleInfo.getRoleName().equals("超级管理员")) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    protected List<RoleInfo> getRoles() {
+        return redisCache.getCacheObject(getToken() + "roles");
     }
 
     protected UserInfo currentUser() {

@@ -22,10 +22,19 @@ public class MenuInfo {
     private String path;
     private String component;
     private String icon;
+    private String perms;
     private Integer orderNum;
     private Integer menuLevel;
     private Integer menuParentId;
     private String createTime;
+
+    public String getPerms() {
+        return perms;
+    }
+
+    public void setPerms(String perms) {
+        this.perms = perms;
+    }
 
     public String getPath() {
         return path;

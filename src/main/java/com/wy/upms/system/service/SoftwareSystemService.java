@@ -1,5 +1,6 @@
 package com.wy.upms.system.service;
 
+import com.wy.sso.user.domain.RoleInfo;
 import com.wy.upms.system.domain.*;
 
 /**
@@ -121,7 +122,7 @@ public interface SoftwareSystemService {
     Object removeMenu(Integer menuId);
 
     /**
-     * 获取系统下的菜单
+     * 根据条件获取菜单及权限
      * @param menuQueryParems
      * @return
      */
@@ -132,4 +133,10 @@ public interface SoftwareSystemService {
      * @return
      */
     Object getRouters();
+
+    /**
+     * 获取所有菜单
+     * @return
+     */
+    Object getAllMenu();
 }

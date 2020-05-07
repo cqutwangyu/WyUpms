@@ -1,5 +1,7 @@
 package com.wy.upms.system.mapper;
 
+import com.wy.sso.user.domain.RoleInfo;
+import com.wy.sso.user.domain.UserPermissionInfo;
 import com.wy.upms.system.domain.*;
 
 import java.util.List;
@@ -45,7 +47,7 @@ public interface SoftwareSysDao {
 
     int deleteMenuById(Integer menuId);
 
-    List<MenuInfo> selectMenuListByParentId(MenuQueryParems menuQueryParems);
+    List<MenuInfo> selectMenuListByParentId(Integer menuParentId);
 
     List<MenuInfo> selectMenuRootNodeList(MenuQueryParems menuQueryParems);
 
@@ -54,4 +56,10 @@ public interface SoftwareSysDao {
     List<PermissionInfo> selectPermissionInfoByMenuId(Integer menuId);
 
     List<MenuInfo> selectAllMenu();
+
+    List<RoleInfo> selectRoleByUser(Integer flowId);
+
+    List<UserPermissionInfo> selectPermissionInfoByUser(Integer flowId);
+
+    List<MenuInfo> selectMenuByUser(Integer flowId);
 }

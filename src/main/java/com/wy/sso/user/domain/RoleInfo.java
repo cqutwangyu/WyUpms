@@ -1,4 +1,6 @@
-package com.wy.upms.system.domain;
+package com.wy.sso.user.domain;
+
+import java.io.Serializable;
 
 /**
  * @author wangyu
@@ -7,7 +9,8 @@ package com.wy.upms.system.domain;
  * @description: TODO
  * @date 2020/4/21 14:38
  */
-public class RoleInfo {
+public class RoleInfo implements Serializable {
+    private static final long serialVersionUID = 1L;
     private String sysName;
     //db
     private Integer flowId;

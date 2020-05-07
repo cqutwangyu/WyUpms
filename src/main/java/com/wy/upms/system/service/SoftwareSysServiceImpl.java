@@ -1,5 +1,6 @@
 package com.wy.upms.system.service;
 
+import com.wy.sso.user.domain.RoleInfo;
 import com.wy.upms.framework.AbstractService;
 import com.wy.upms.system.domain.*;
 import com.wy.upms.system.domain.vo.RouterVo;
@@ -125,10 +126,21 @@ public class SoftwareSysServiceImpl extends AbstractService implements SoftwareS
 
     @Override
     public Object getRouters() {
-        List<MenuInfo> menuList = softwareSysDao.selectAllMenu();
+        List<MenuInfo> menuList;
+        if (isAdmin()) {
+            menuList = softwareSysDao.selectAllMenu();
+        } else {
+            menuList = softwareSysDao.selectMenuByUser(currentUser().getFlowId());
+        }
         List<MenuInfo> menuTreeList = buildMenuTree(menuList);
         List<RouterVo> routerVoList = buildRouters(menuTreeList);
         return routerVoList;
+    }
+
+    @Override
+    public Object getAllMenu() {
+        List<MenuInfo> menuInfoList = softwareSysDao.selectAllMenu();
+        return buildMenuTree(menuInfoList);
     }
 
 
@@ -192,7 +204,7 @@ public class SoftwareSysServiceImpl extends AbstractService implements SoftwareS
     private void buildMenuTree(List<MenuInfo> parentNodeList, MenuQueryParems menuQueryParems) {
         for (MenuInfo node : parentNodeList) {
             menuQueryParems.setMenuParentId(node.getFlowId());
-            List<MenuInfo> menuNodeInfos = softwareSysDao.selectMenuListByParentId(menuQueryParems);
+            List<MenuInfo> menuNodeInfos = softwareSysDao.selectMenuListByParentId(menuQueryParems.getMenuParentId());
             for (MenuInfo children : menuNodeInfos) {
                 if (children.getQuery() == null || children.getEdit() == null || children.getExport() == null || children.getImpower() == null) {
                     children.setQuery(node.getQuery());
