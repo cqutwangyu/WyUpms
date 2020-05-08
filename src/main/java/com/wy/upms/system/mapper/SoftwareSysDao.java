@@ -3,8 +3,10 @@ package com.wy.upms.system.mapper;
 import com.wy.sso.user.domain.RoleInfo;
 import com.wy.sso.user.domain.UserPermissionInfo;
 import com.wy.upms.system.domain.*;
+import com.wy.upms.system.domain.vo.MenuQueryParemsVo;
 
 import java.util.List;
+import java.util.Map;
 
 /**
  * @author wangyu
@@ -47,19 +49,21 @@ public interface SoftwareSysDao {
 
     int deleteMenuById(Integer menuId);
 
-    List<MenuInfo> selectMenuListByParentId(Integer menuParentId);
+    List<MenuInfo> selectMenuListByParems(MenuQueryParemsVo menuQueryParemsVo);
 
-    List<MenuInfo> selectMenuRootNodeList(MenuQueryParems menuQueryParems);
+    List<MenuInfo> selectMenuListByUserIdAndParentId(Integer userId,Integer menuParentId);
 
-    int deletePermissionAndChildren(Integer sysId, Integer roleId, Integer menuId);
+    List<MenuInfo> selectMenuRootNodeList(MenuQueryParemsVo menuQueryParemsVo);
 
-    List<PermissionInfo> selectPermissionInfoByMenuId(Integer menuId);
+    int deletePermissionAndChildren(Map<String, Object> params);
+
+    List<PermissionInfo> selectPermissionInfoByMenuId(Map<String, Object> params);
 
     List<MenuInfo> selectAllMenu();
 
-    List<RoleInfo> selectRoleByUser(Integer flowId);
+    List<RoleInfo> selectRoleByUser(Integer userId);
 
-    List<UserPermissionInfo> selectPermissionInfoByUser(Integer flowId);
+    List<UserPermissionInfo> selectPermissionInfoByUser(Integer userId);
 
-    List<MenuInfo> selectMenuByUser(Integer flowId);
+    List<MenuInfo> selectMenuByUser(Integer userId);
 }

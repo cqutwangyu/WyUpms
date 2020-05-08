@@ -2,6 +2,7 @@ package com.wy.upms.system.service;
 
 import com.wy.sso.user.domain.RoleInfo;
 import com.wy.upms.system.domain.*;
+import com.wy.upms.system.domain.vo.MenuQueryParemsVo;
 
 /**
  * @author wangyu
@@ -123,10 +124,10 @@ public interface SoftwareSystemService {
 
     /**
      * 根据条件获取菜单及权限
-     * @param menuQueryParems
+     * @param menuQueryParemsVo
      * @return
      */
-    Object listMenu(MenuQueryParems menuQueryParems);
+    Object listMenu(MenuQueryParemsVo menuQueryParemsVo);
 
     /**
      * 获取路由信息

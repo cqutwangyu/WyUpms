@@ -45,7 +45,8 @@ public class AbstractController extends AbstractBase {
         Map<String, Object> map = new HashMap<>();
         String message = e.getMessage();
         if (!StringUtils.hasText(message)) {
-            throw new IllegalArgumentException("message should not be empty");
+//            throw new IllegalArgumentException("message should not be empty");
+            throw new IllegalArgumentException(e.getMessage());
         }
         Integer statusCode = UpmsException.getStatusCode(message);
         if (statusCode != 0) {

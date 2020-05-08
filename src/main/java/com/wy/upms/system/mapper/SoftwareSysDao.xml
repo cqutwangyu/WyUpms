@@ -65,7 +65,10 @@
     </delete>
     <delete id="deletePermissionAndChildren">
         delete from b_permission
-        where sys_id = #{sysId} and role_id = #{roleId}
+        where sys_id = #{sysId}
+        <if test="roleId != null">and role_id = #{roleId}</if>
+        <if test="userId != null">and user_id = #{userId}</if>
+        <if test="depId != null">and dep_id = #{depId}</if>
         and menu_id = #{menuId}
     </delete>
     <select id="selectAllRole" resultType="com.wy.sso.user.domain.RoleInfo">
@@ -80,22 +83,80 @@
         select flow_id,sys_name,create_time
         from b_system
     </select>
-    <select id="selectMenuListByParentId" resultType="com.wy.upms.system.domain.MenuInfo">
+    <select id="selectMenuListByParems" resultType="com.wy.upms.system.domain.MenuInfo">
+        SELECT
+        m.flow_id,
+        m.sys_id,
+        m.menu_name,
+        m.menu_level,
+        m.path,
+        m.component,
+        m.icon,
+        m.menu_parent_id,
+        m.perms,
+        m.order_num,
+        m.create_time,
+        QUERY,
+        edit,
+        export,
+        impower
+        FROM
+        b_system_menu_tree m
+        LEFT JOIN (
+        SELECT
+        p.flow_id,
+        p.user_id,
+        p.role_id,
+        p.sys_id,
+        p.dep_id,
+        p.menu_id,
+        p.menu_parent_id,
+        p.create_time,
+        QUERY,
+        edit,
+        export,
+        impower
+        FROM
+        b_permission p
+        LEFT JOIN b_role r ON r.flow_id = p.role_id
+        LEFT JOIN b_user u ON u.flow_id = p.user_id
+        LEFT JOIN b_user_role ur ON ur.role_id = r.flow_id
+        AND ur.user_id = u.flow_id
+        LEFT JOIN b_department d ON d.flow_id = r.dep_id
+        WHERE 1=0
+        <if test="roleId != null">or r.flow_id = #{roleId}</if>
+        <if test="userId != null">or b.flow_id = #{userId}</if>
+        <if test="depId != null">or d.flow_id = #{depId}</if>
+        ) p ON m.flow_id = p.menu_id
+        where m.menu_parent_id = #{menuParentId}
+        ORDER BY
+        m.order_num;
+    </select>
+    <select id="selectMenuListByUserIdAndParentId" resultType="com.wy.upms.system.domain.MenuInfo">
         select
             m.flow_id,
             m.sys_id,
-            menu_name,
-            menu_level,
+            m.menu_name,
+            m.menu_level,
+            m.path,
+            m.component,
+            m.icon,
             m.menu_parent_id,
+            m.perms,
+            m.order_num,
             m.create_time,
             QUERY,
             edit,
             export,
             impower
-        from b_system_menu_tree m left join b_permission p ON m.flow_id = p.menu_id
-        AND m.sys_id = p.sys_id
-        where m.menu_parent_id = #{menuParentId}
-        order by m.flow_id
+        from
+            b_user u inner join b_user_role ur on u.flow_id = ur.user_id
+            inner join b_role r on r.flow_id = ur.role_id
+            inner join b_permission p on r.flow_id = p.role_id
+            inner join b_system_menu_tree m on m.flow_id = p.menu_id
+        where m.menu_parent_id = #{menuParentId} and
+            u.flow_id = #{userId} and (ISNULL(p.QUERY) or p.QUERY = 1)
+        order by m.order_num
     </select>
     <select id="selectMenuRootNodeList" resultType="com.wy.upms.system.domain.MenuInfo">
         SELECT DISTINCT
@@ -116,20 +177,24 @@
         *
         FROM
         b_permission
-        where 1=0
-        <if test="roleId != null">or role_id = #{roleId}</if>
-        <if test="userId != null">or user_id = #{userId}</if>
-        <if test="depId != null">or dep_id = #{depId}</if>
+        WHERE 1 = 0
+        <if test="roleId != null">OR role_id = #{roleId}</if>
+        <if test="userId != null">OR user_id = #{userId}</if>
+        <if test="depId != null">OR dep_id = #{depId}</if>
         ) p ON m.flow_id = p.menu_id
         AND m.sys_id = p.sys_id
         WHERE
         m.sys_id = #{sysId} and menu_level = 0
-        order by m.flow_id
+        ORDER BY
+        m.flow_id
     </select>
     <select id="selectPermissionInfoByMenuId" resultType="com.wy.upms.system.domain.PermissionInfo">
         select flow_id,user_id,role_id,sys_id,dep_id,menu_id,menu_parent_id,query,edit,export,impower,create_time
-         from b_permission
-         where menu_parent_id = #{menuId}
+        from b_permission
+        where menu_parent_id = #{menuId}
+        <if test="roleId != null">and role_id = #{roleId}</if>
+        <if test="userId != null">and user_id = #{userId}</if>
+        <if test="depId != null">and dep_id = #{depId}</if>
     </select>
     <select id="selectAllMenu" resultType="com.wy.upms.system.domain.MenuInfo">
         SELECT
@@ -151,12 +216,12 @@
     <select id="selectRoleByUser" resultType="com.wy.sso.user.domain.RoleInfo">
         select r.flow_id,sys_id,role_name,r.create_time,s.sys_name
         from b_role r inner join b_user_role ur on r.flow_id=ur.role_id inner join b_system s on r.sys_id=s.flow_id
-        where ur.user_id=#{flowId}
+        where ur.user_id=#{userId}
     </select>
     <select id="selectPermissionInfoByUser" resultType="com.wy.sso.user.domain.UserPermissionInfo">
         select flow_id,user_id,role_id,sys_id,dep_id,menu_id,menu_parent_id,query,edit,export,impower,create_time
         from b_permission p
-        where user_id=#{flowIds}
+        where user_id=#{userId}
     </select>
     <select id="selectMenuByUser" resultType="com.wy.upms.system.domain.MenuInfo">
         SELECT
@@ -170,13 +235,18 @@
             m.menu_parent_id,
             m.perms,
             m.order_num,
-            m.create_time
+            m.create_time,
+            QUERY,
+            edit,
+            export,
+            impower
         FROM
             b_user u inner join b_user_role ur on u.flow_id = ur.user_id
             inner join b_role r on r.flow_id = ur.role_id
             inner join b_permission p on r.flow_id = p.role_id
             inner join b_system_menu_tree m on m.flow_id = p.menu_id
         where
-            u.flow_id = #{flowId}
+            u.flow_id = #{userId} and p.QUERY = 1
+        order by m.order_num
     </select>
 </mapper>

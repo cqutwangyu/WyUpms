@@ -1,4 +1,4 @@
-package com.wy.upms.system.domain;
+package com.wy.upms.system.domain.vo;
 
 /**
  * @author wangyu
@@ -7,7 +7,7 @@ package com.wy.upms.system.domain;
  * @description: TODO
  * @date 2020/4/24 14:54
  */
-public class MenuQueryParems {
+public class MenuQueryParemsVo {
     private Integer sysId;
     private Integer depId;
     private Integer roleId;

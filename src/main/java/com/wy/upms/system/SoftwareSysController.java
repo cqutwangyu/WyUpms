@@ -3,6 +3,7 @@ package com.wy.upms.system;
 import com.wy.sso.user.domain.RoleInfo;
 import com.wy.upms.framework.AbstractController;
 import com.wy.upms.system.domain.*;
+import com.wy.upms.system.domain.vo.MenuQueryParemsVo;
 import com.wy.upms.system.service.SoftwareSystemService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
@@ -150,14 +151,14 @@ public class SoftwareSysController extends AbstractController {
     /**
      * 根据条件查询菜单及权限
      *
-     * @param menuQueryParems
+     * @param menuQueryParemsVo
      * @return
      */
     @PostMapping("/menu/list")
     @ResponseBody
-    public Object listMenu(MenuQueryParems menuQueryParems) {
+    public Object listMenu(MenuQueryParemsVo menuQueryParemsVo) {
         try {
-            return succeed(softwareSystemService.listMenu(menuQueryParems));
+            return succeed(softwareSystemService.listMenu(menuQueryParemsVo));
         } catch (Exception e) {
             return failure(e);
         }

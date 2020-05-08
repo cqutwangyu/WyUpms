@@ -1,6 +1,7 @@
 package com.wy.upms.system.domain;
 
 import java.util.List;
+import java.util.Objects;
 
 /**
  * @author wangyu
@@ -157,13 +158,15 @@ public class MenuInfo {
     }
 
     @Override
-    public String toString() {
-        return "MenuInfo{" +
-                "folwId=" + flowId +
-                ", menuName='" + menuName + '\'' +
-                ", menuLevel=" + menuLevel +
-                ", menuParentId=" + menuParentId +
-                ", createTime='" + createTime + '\'' +
-                '}';
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        MenuInfo menuInfo = (MenuInfo) o;
+        return Objects.equals(flowId, menuInfo.flowId);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(children, query, edit, export, impower, flowId, sysId, menuName, path, component, icon, perms, orderNum, menuLevel, menuParentId, createTime);
     }
 }

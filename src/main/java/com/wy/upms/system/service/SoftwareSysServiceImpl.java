@@ -2,16 +2,18 @@ package com.wy.upms.system.service;
 
 import com.wy.sso.user.domain.RoleInfo;
 import com.wy.upms.framework.AbstractService;
-import com.wy.upms.system.domain.*;
+import com.wy.upms.system.domain.DepartmentInfo;
+import com.wy.upms.system.domain.MenuInfo;
+import com.wy.upms.system.domain.PermissionInfo;
+import com.wy.upms.system.domain.SoftwareSysInfo;
+import com.wy.upms.system.domain.vo.MenuQueryParemsVo;
 import com.wy.upms.system.domain.vo.RouterVo;
 import com.wy.upms.system.mapper.SoftwareSysDao;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Objects;
+import java.util.*;
 
 /**
  * @author wangyu
@@ -44,17 +46,26 @@ public class SoftwareSysServiceImpl extends AbstractService implements SoftwareS
     @Override
     @Transactional
     public Object putPermission(PermissionInfo permissionInfo) throws Exception {
-        deletePermission(permissionInfo.getSysId(), permissionInfo.getRoleId(), permissionInfo.getMenuId());
+        Map<String, Object> params = new HashMap<>();
+        params.put("sysId", permissionInfo.getSysId());
+        params.put("userId", permissionInfo.getUserId());
+        params.put("roleId", permissionInfo.getRoleId());
+        params.put("depId", permissionInfo.getDepId());
+        params.put("menuId", permissionInfo.getMenuId());
+        deletePermission(params);
         return result(softwareSysDao.insertPermissionInfo(permissionInfo));
     }
 
-    private void deletePermission(Integer sysId, Integer roleId, Integer menuId) {
-        List<PermissionInfo> list = softwareSysDao.selectPermissionInfoByMenuId(menuId);
+    private void deletePermission(Map<String, Object> params) {
+        List<PermissionInfo> list = softwareSysDao.selectPermissionInfoByMenuId(params);
+        Integer menuRootId = (Integer) params.get("menuId");
         for (PermissionInfo p : list) {
-            deletePermission(sysId, roleId, p.getMenuId());
-            softwareSysDao.deletePermissionAndChildren(sysId, roleId, p.getMenuId());
+            params.put("menuId", p.getMenuId());
+            deletePermission(params);
+            softwareSysDao.deletePermissionAndChildren(params);
         }
-        softwareSysDao.deletePermissionAndChildren(sysId, roleId, menuId);
+        params.put("menuId", menuRootId);
+        softwareSysDao.deletePermissionAndChildren(params);
     }
 
     @Override
@@ -118,9 +129,9 @@ public class SoftwareSysServiceImpl extends AbstractService implements SoftwareS
     }
 
     @Override
-    public Object listMenu(MenuQueryParems menuQueryParems) {
-        List<MenuInfo> rootNodeList = softwareSysDao.selectMenuRootNodeList(menuQueryParems);
-        buildMenuTree(rootNodeList, menuQueryParems);
+    public Object listMenu(MenuQueryParemsVo menuQueryParemsVo) {
+        List<MenuInfo> rootNodeList = softwareSysDao.selectMenuRootNodeList(menuQueryParemsVo);
+        buildMenuTree(rootNodeList, menuQueryParemsVo);
         return rootNodeList;
     }
 
@@ -131,6 +142,18 @@ public class SoftwareSysServiceImpl extends AbstractService implements SoftwareS
             menuList = softwareSysDao.selectAllMenu();
         } else {
             menuList = softwareSysDao.selectMenuByUser(currentUser().getFlowId());
+            int count = menuList.size();
+            for (int i = 0; i < count; i++) {
+                MenuInfo parentMenu = menuList.get(i);
+                List<MenuInfo> childMenuList = softwareSysDao.selectMenuListByUserIdAndParentId(currentUser().getFlowId(), parentMenu.getFlowId());
+                for (MenuInfo childMenu : childMenuList) {
+                    if (childMenu.getQuery() == null || childMenu.getQuery() && parentMenu.getQuery()) {
+                        if (!menuList.contains(childMenu)) {
+                            menuList.add(childMenu);
+                        }
+                    }
+                }
+            }
         }
         List<MenuInfo> menuTreeList = buildMenuTree(menuList);
         List<RouterVo> routerVoList = buildRouters(menuTreeList);
@@ -199,13 +222,13 @@ public class SoftwareSysServiceImpl extends AbstractService implements SoftwareS
      * 权限管理系统中，授权页面树形节点构造
      *
      * @param parentNodeList
-     * @param menuQueryParems
+     * @param menuQueryParemsVo
      */
-    private void buildMenuTree(List<MenuInfo> parentNodeList, MenuQueryParems menuQueryParems) {
+    private void buildMenuTree(List<MenuInfo> parentNodeList, MenuQueryParemsVo menuQueryParemsVo) {
         for (MenuInfo node : parentNodeList) {
-            menuQueryParems.setMenuParentId(node.getFlowId());
-            List<MenuInfo> menuNodeInfos = softwareSysDao.selectMenuListByParentId(menuQueryParems.getMenuParentId());
-            for (MenuInfo children : menuNodeInfos) {
+            menuQueryParemsVo.setMenuParentId(node.getFlowId());
+            List<MenuInfo> childMenuNodeInfos = softwareSysDao.selectMenuListByParems(menuQueryParemsVo);
+            for (MenuInfo children : childMenuNodeInfos) {
                 if (children.getQuery() == null || children.getEdit() == null || children.getExport() == null || children.getImpower() == null) {
                     children.setQuery(node.getQuery());
                     children.setEdit(node.getEdit());
@@ -213,11 +236,11 @@ public class SoftwareSysServiceImpl extends AbstractService implements SoftwareS
                     children.setImpower(node.getImpower());
                 }
             }
-            node.setChildren(menuNodeInfos);
-            if (Objects.isNull(menuNodeInfos)) {
+            node.setChildren(childMenuNodeInfos);
+            if (Objects.isNull(childMenuNodeInfos)) {
                 return;
             } else {
-                buildMenuTree(menuNodeInfos, menuQueryParems);
+                buildMenuTree(childMenuNodeInfos, menuQueryParemsVo);
             }
         }
 
