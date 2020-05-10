@@ -4,6 +4,7 @@ import com.wy.sso.user.domain.UserInfo;
 import com.wy.sso.user.domain.UserPermissionInfo;
 import com.wy.upms.framework.AbstractService;
 import com.wy.sso.user.domain.RoleInfo;
+import com.wy.upms.system.domain.UserRoleInfo;
 import com.wy.upms.system.mapper.SoftwareSysDao;
 import com.wy.upms.user.mapper.UserDao;
 import com.wy.upms.utils.TokenUtil;
@@ -41,7 +42,20 @@ public class UserServiceImpl extends AbstractService implements UserService {
 
     @Override
     public Object register(UserInfo userInfo) throws Exception {
+        UserInfo db_user = userDao.selectUserByName(userInfo.getUserName());
+        if(db_user!=null){
+            throw new Exception("用户名或昵称已存在");
+        }
         userDao.insertUser(userInfo);
+        String roleIds = userInfo.getRoleIds();
+        if (roleIds != null) {
+            String[] split = roleIds.split(",");
+            for (String roleId : split) {
+                db_user = userDao.selectUserByName(userInfo.getUserName());
+                UserRoleInfo userRoleInfo = new UserRoleInfo(db_user.getFlowId(), Integer.valueOf(roleId));
+                softwareSysDao.insertUserRoleInfo(userRoleInfo);
+            }
+        }
         return "注册成功";
     }
 
@@ -55,8 +69,12 @@ public class UserServiceImpl extends AbstractService implements UserService {
         List<UserInfo> userInfos = userDao.selectAllUser();
         for (UserInfo user : userInfos) {
             List<RoleInfo> roleInfos = softwareSysDao.selectRoleByUser(user.getFlowId());
-            user.setRoles(roleInfos);
-            List<UserPermissionInfo> userPermissionInfos=softwareSysDao.selectPermissionInfoByUser(user.getFlowId());
+            if (roleInfos != null && !roleInfos.isEmpty()) {
+                user.setRoles(roleInfos);
+                user.setSysId(roleInfos.get(0).getSysId());
+                user.setDepId(roleInfos.get(0).getDepId());
+            }
+            List<UserPermissionInfo> userPermissionInfos = softwareSysDao.selectPermissionInfoByUser(user.getFlowId());
             user.setPermissionInfoList(userPermissionInfos);
         }
         return userInfos;
@@ -69,6 +87,16 @@ public class UserServiceImpl extends AbstractService implements UserService {
 
     @Override
     public Object updateUserInfo(UserInfo userInfo) {
-        return userDao.updateUser(userInfo) == 1 ? "更新成功" : "更新失败";
+        int flag = userDao.updateUser(userInfo);
+        String roleIds = userInfo.getRoleIds();
+        if (roleIds != null) {
+            String[] split = roleIds.split(",");
+            softwareSysDao.deleteUserRoleInfo(userInfo.getFlowId());
+            for (String roleId : split) {
+                UserRoleInfo userRoleInfo = new UserRoleInfo(userInfo.getFlowId(),Integer.valueOf(roleId));
+                softwareSysDao.insertUserRoleInfo(userRoleInfo);
+            }
+        }
+        return flag == 1 ? "更新成功" : "更新失败";
     }
 }

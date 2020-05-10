@@ -14,14 +14,59 @@ public class UserInfo implements Serializable {
     private static final long serialVersionUID = 1L;
 
     private String token;
+    private String roleIds;
     private List<RoleInfo> roles;
+    private Integer depId;
+    private Integer sysId;
     private List<UserPermissionInfo> permissionInfoList;
     /*db*/
     private Integer flowId;
     private String userName;
     private String petName;
     private String password;
+    private String avatar;
+    private String activated;
     private String createTime;
+
+    public Integer getSysId() {
+        return sysId;
+    }
+
+    public void setSysId(Integer sysId) {
+        this.sysId = sysId;
+    }
+
+    public Integer getDepId() {
+        return depId;
+    }
+
+    public void setDepId(Integer depId) {
+        this.depId = depId;
+    }
+
+    public String getRoleIds() {
+        return roleIds;
+    }
+
+    public void setRoleIds(String roleIds) {
+        this.roleIds = roleIds;
+    }
+
+    public String getAvatar() {
+        return avatar;
+    }
+
+    public void setAvatar(String avatar) {
+        this.avatar = avatar;
+    }
+
+    public String getActivated() {
+        return activated;
+    }
+
+    public void setActivated(String activated) {
+        this.activated = activated;
+    }
 
     public List<UserPermissionInfo> getPermissionInfoList() {
         return permissionInfoList;

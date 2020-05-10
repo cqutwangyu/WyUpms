@@ -21,10 +21,6 @@ public class RouterVo {
     private String redirect;
 
     public RouterVo(MenuInfo menu) {
-        this.meta = new MetaVo(menu.getMenuName(), menu.getIcon());
-        this.name = menu.getPath();
-        this.component = menu.getComponent();
-        this.path = "/" + menu.getPath();
     }
 
     public String getComponent() {

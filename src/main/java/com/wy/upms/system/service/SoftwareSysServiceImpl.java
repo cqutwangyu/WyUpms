@@ -7,6 +7,7 @@ import com.wy.upms.system.domain.MenuInfo;
 import com.wy.upms.system.domain.PermissionInfo;
 import com.wy.upms.system.domain.SoftwareSysInfo;
 import com.wy.upms.system.domain.vo.MenuQueryParemsVo;
+import com.wy.upms.system.domain.vo.MetaVo;
 import com.wy.upms.system.domain.vo.RouterVo;
 import com.wy.upms.system.mapper.SoftwareSysDao;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -45,28 +46,118 @@ public class SoftwareSysServiceImpl extends AbstractService implements SoftwareS
 
     @Override
     @Transactional
-    public Object putPermission(PermissionInfo permissionInfo) throws Exception {
-        Map<String, Object> params = new HashMap<>();
-        params.put("sysId", permissionInfo.getSysId());
-        params.put("userId", permissionInfo.getUserId());
-        params.put("roleId", permissionInfo.getRoleId());
-        params.put("depId", permissionInfo.getDepId());
-        params.put("menuId", permissionInfo.getMenuId());
-        deletePermission(params);
-        return result(softwareSysDao.insertPermissionInfo(permissionInfo));
+    public Object putPermission(PermissionInfo perInfo) throws Exception {
+        int flag = 0;
+        if (perInfo.getFlowId() == null) {
+            flag = softwareSysDao.insertPermission(perInfo);
+        } else {
+            flag = softwareSysDao.updatePermission(perInfo);
+        }
+        updateChildPermission(perInfo);
+        updateParentPermission(perInfo);
+        return result(flag);
     }
 
-    private void deletePermission(Map<String, Object> params) {
-        List<PermissionInfo> list = softwareSysDao.selectPermissionInfoByMenuId(params);
-        Integer menuRootId = (Integer) params.get("menuId");
-        for (PermissionInfo p : list) {
-            params.put("menuId", p.getMenuId());
-            deletePermission(params);
-            softwareSysDao.deletePermissionAndChildren(params);
+    private void updateChildPermission(PermissionInfo parentPer) {
+        List<PermissionInfo> childPerList = softwareSysDao.selectChildPermissionByParams(parentPer);
+        if (childPerList.isEmpty()) {
+            buildChildPermissions(parentPer, true);
         }
-        params.put("menuId", menuRootId);
-        softwareSysDao.deletePermissionAndChildren(params);
+        for (PermissionInfo childPer : childPerList) {
+            childPer.setQuery(parentPer.getQuery());
+            childPer.setEdit(parentPer.getEdit());
+            childPer.setExport(parentPer.getExport());
+            childPer.setImpower(parentPer.getImpower());
+            softwareSysDao.updatePermission(childPer);
+        }
     }
+
+    private void updateParentPermission(PermissionInfo childPer) {
+        if (childPer.getMenuParentId() != -1) {
+            PermissionInfo parentPer = softwareSysDao.selectParentPermissionByParams(childPer);
+            if (parentPer == null) {
+                parentPer = new PermissionInfo();
+                parentPer.setUserId(childPer.getUserId());
+                parentPer.setSysId(childPer.getSysId());
+                parentPer.setRoleId(childPer.getRoleId());
+                parentPer.setDepId(childPer.getDepId());
+                parentPer.setMenuId(childPer.getMenuParentId());
+                parentPer.setMenuParentId(-1);
+                parentPer.setQuery(false);
+                parentPer.setEdit(false);
+                parentPer.setExport(false);
+                parentPer.setImpower(false);
+                softwareSysDao.insertPermission(parentPer);
+                buildChildPermissions(parentPer, childPer, false);
+                return;
+            }
+            List<PermissionInfo> childPerList = softwareSysDao.selectChildPermissionByParams(parentPer);
+            boolean query = false, edit = true, export = true, impower = true;
+            for (PermissionInfo cp : childPerList) {
+                if (cp.getQuery()) {
+                    query = true;
+                }
+                if (!cp.getEdit()) {
+                    edit = false;
+                }
+                if (!cp.getExport()) {
+                    export = false;
+                }
+                if (!cp.getImpower()) {
+                    impower = false;
+                }
+
+            }
+            parentPer.setQuery(query);
+            parentPer.setEdit(edit);
+            parentPer.setExport(export);
+            parentPer.setImpower(impower);
+            softwareSysDao.updatePermission(parentPer);
+        }
+    }
+
+    private void buildChildPermissions(PermissionInfo parentPer, boolean isParent) {
+        buildChildPermissions(parentPer, parentPer, isParent);
+    }
+
+    private void buildChildPermissions(PermissionInfo parentPer, PermissionInfo currentPer, boolean isParent) {
+        MenuQueryParemsVo menuQueryParemsVo = new MenuQueryParemsVo();
+        menuQueryParemsVo.setUserId(parentPer.getUserId());
+        menuQueryParemsVo.setSysId(parentPer.getSysId());
+        menuQueryParemsVo.setDepId(parentPer.getDepId());
+        menuQueryParemsVo.setRoleId(parentPer.getRoleId());
+        menuQueryParemsVo.setMenuParentId(parentPer.getMenuId());
+        List<MenuInfo> menuInfoList = softwareSysDao.selectMenuListByParems(menuQueryParemsVo);
+        for (MenuInfo menu : menuInfoList) {
+            if (menu.getFlowId().equals(currentPer.getMenuId())) {
+                continue;
+            }
+            PermissionInfo p = new PermissionInfo();
+            p.setUserId(parentPer.getUserId());
+            p.setSysId(parentPer.getSysId());
+            p.setDepId(parentPer.getDepId());
+            p.setRoleId(parentPer.getRoleId());
+            p.setMenuId(menu.getFlowId());
+            p.setMenuParentId(parentPer.getMenuId());
+            p.setQuery(true);
+            p.setEdit(isParent ? parentPer.getEdit() : false);
+            p.setExport(isParent ? parentPer.getExport() : false);
+            p.setImpower(isParent ? parentPer.getImpower() : false);
+            softwareSysDao.insertPermission(p);
+        }
+    }
+
+//    private void updatePermission(Map<String, Object> params) {
+//        List<PermissionInfo> list = softwareSysDao.selectChildPermissionByParams(params);
+//        Integer menuRootId = (Integer) params.get("menuId");
+//        for (PermissionInfo p : list) {
+//            params.put("menuId", p.getMenuId());
+//            updatePermission(params);
+//            softwareSysDao.deletePermissionAndChildren(params);
+//        }
+//        params.put("menuId", menuRootId);
+//        softwareSysDao.deletePermissionAndChildren(params);
+//    }
 
     @Override
     public Object getAllRole() {
@@ -168,16 +259,24 @@ public class SoftwareSysServiceImpl extends AbstractService implements SoftwareS
 
 
     private List<RouterVo> buildRouters(List<MenuInfo> menuList) {
+        return buildRouters(menuList, "/");
+    }
+
+    private List<RouterVo> buildRouters(List<MenuInfo> menuList, String parentPath) {
         List<RouterVo> routerVoList = new ArrayList<>();
         for (MenuInfo menu : menuList) {
             RouterVo routerVo = new RouterVo(menu);
+            routerVo.setMeta(new MetaVo(menu.getMenuName(), menu.getIcon()));
+            routerVo.setName(menu.getPath());
+            routerVo.setComponent(menu.getComponent());
+            routerVo.setPath(parentPath+menu.getPath());
             if (menu.getMenuLevel().equals(0)) {
                 routerVo.setAlwaysShow(true);
                 routerVo.setRedirect("noRedirect");
             } else {
                 routerVo.setAlwaysShow(false);
             }
-            routerVo.setChildren(buildRouters(menu.getChildren()));
+            routerVo.setChildren(buildRouters(menu.getChildren(),""));
             routerVoList.add(routerVo);
         }
         return routerVoList;

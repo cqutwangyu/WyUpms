@@ -8,12 +8,12 @@ package com.wy.upms.system.domain;
  * @date 2020/4/21 14:59
  */
 public class PermissionInfo {
-    private Integer depId;
-    private Integer userId;
     //db
     private Integer flowId;
-    private Integer roleId;
+    private Integer userId;
     private Integer sysId;
+    private Integer depId;
+    private Integer roleId;
     private Integer menuId;
     private Integer menuParentId;
 

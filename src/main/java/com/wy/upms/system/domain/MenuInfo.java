@@ -12,6 +12,7 @@ import java.util.Objects;
  */
 public class MenuInfo {
     private List<MenuInfo> children;
+    private Integer perId;
     private Boolean query;
     private Boolean edit;
     private Boolean export;
@@ -28,6 +29,14 @@ public class MenuInfo {
     private Integer menuLevel;
     private Integer menuParentId;
     private String createTime;
+
+    public Integer getPerId() {
+        return perId;
+    }
+
+    public void setPerId(Integer perId) {
+        this.perId = perId;
+    }
 
     public String getPerms() {
         return perms;

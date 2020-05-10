@@ -6,14 +6,14 @@
         value (#{sysName})
     </insert>
     <insert id="insertRoleInfo">
-        insert into b_role (sys_id,role_name)
-        value (#{sysId},#{roleName})
+        insert into b_role (sys_id,dep_id,role_name)
+        value (#{sysId},#{depId},#{roleName})
     </insert>
     <insert id="insertMenuInfo">
         insert into b_system_menu_tree (sys_id,menu_name,menu_level,menu_parent_id)
         value (#{sysId},#{menuName},#{menuLevel},#{menuParentId})
     </insert>
-    <insert id="insertPermissionInfo">
+    <insert id="insertPermission">
         insert into b_permission (user_id,role_id,sys_id,dep_id,menu_id,menu_parent_id,query,edit,export,impower)
         value (#{userId},#{roleId},#{sysId},#{depId},#{menuId},#{menuParentId},#{query},#{edit},#{export},#{impower})
     </insert>
@@ -21,8 +21,17 @@
         insert into b_department (sys_id,dep_name)
         value (#{sysId},#{depName})
     </insert>
+    <insert id="insertUserRoleInfo">
+        insert into b_user_role (user_id,role_id)
+        value (#{userId},#{roleId})
+    </insert>
     <update id="updateRole">
-        update b_role set sys_id = #{sysId},role_name = #{roleName}
+        update b_role
+        <set>
+            <if test="sysId != null and sysId != ''">sys_id = #{sysId},</if>
+            <if test="depId != null and depId != ''">dep_id = #{depId},</if>
+            <if test="roleName != null and roleName != ''">role_name = #{roleName},</if>
+        </set>
         where flow_id = #{flowId}
     </update>
     <update id="updateDepartmentInfo">
@@ -43,8 +52,19 @@
             <if test="component != null and component != ''">component = #{component},</if>
             <if test="orderNum != null and orderNum != ''">order_num = #{orderNum},</if>
             <if test="perms != null and perms != ''">perms = #{perms},</if>
-            <if test="icon != null and icon != ''">icon = #{icon},</if>
+            <if test="icon != null and icon != ''">icon = #{icon}</if>
         </set>
+        where flow_id = #{flowId}
+    </update>
+    <update id="updatePermissionByParams">
+        update b_permission set query=#{query},edit=#{edit},export=#{export},impower=#{impower}
+        where menu_id = #{menuParentId}
+        <if test="roleId != null">and role_id = #{roleId}</if>
+        <if test="userId != null">and user_id = #{userId}</if>
+        <if test="depId != null">and dep_id = #{depId}</if>
+    </update>
+    <update id="updatePermission">
+        update b_permission set query=#{query},edit=#{edit},export=#{export},impower=#{impower}
         where flow_id = #{flowId}
     </update>
     <delete id="deleteRoleById">
@@ -71,8 +91,12 @@
         <if test="depId != null">and dep_id = #{depId}</if>
         and menu_id = #{menuId}
     </delete>
+    <delete id="deleteUserRoleInfo">
+        delete from b_user_role
+        where user_id = #{flowId}
+    </delete>
     <select id="selectAllRole" resultType="com.wy.sso.user.domain.RoleInfo">
-        select r.flow_id,sys_id,role_name,r.create_time,s.sys_name
+        select r.flow_id,sys_id,dep_id,role_name,r.create_time,s.sys_name
         from b_role r inner join b_system s on r.sys_id = s.flow_id
     </select>
     <select id="selectAllDepartment" resultType="com.wy.upms.system.domain.DepartmentInfo">
@@ -86,6 +110,7 @@
     <select id="selectMenuListByParems" resultType="com.wy.upms.system.domain.MenuInfo">
         SELECT
         m.flow_id,
+        p.flow_id perId,
         m.sys_id,
         m.menu_name,
         m.menu_level,
@@ -161,6 +186,7 @@
     <select id="selectMenuRootNodeList" resultType="com.wy.upms.system.domain.MenuInfo">
         SELECT DISTINCT
         m.flow_id,
+        p.flow_id perId,
         m.sys_id,
         menu_name,
         menu_level,
@@ -188,7 +214,7 @@
         ORDER BY
         m.flow_id
     </select>
-    <select id="selectPermissionInfoByMenuId" resultType="com.wy.upms.system.domain.PermissionInfo">
+    <select id="selectChildPermissionByParams" resultType="com.wy.upms.system.domain.PermissionInfo">
         select flow_id,user_id,role_id,sys_id,dep_id,menu_id,menu_parent_id,query,edit,export,impower,create_time
         from b_permission
         where menu_parent_id = #{menuId}
@@ -214,7 +240,7 @@
         order by order_num
     </select>
     <select id="selectRoleByUser" resultType="com.wy.sso.user.domain.RoleInfo">
-        select r.flow_id,sys_id,role_name,r.create_time,s.sys_name
+        select r.flow_id,r.dep_id,sys_id,role_name,r.create_time,s.sys_name
         from b_role r inner join b_user_role ur on r.flow_id=ur.role_id inner join b_system s on r.sys_id=s.flow_id
         where ur.user_id=#{userId}
     </select>
@@ -248,5 +274,13 @@
         where
             u.flow_id = #{userId} and p.QUERY = 1
         order by m.order_num
+    </select>
+    <select id="selectParentPermissionByParams" resultType="com.wy.upms.system.domain.PermissionInfo">
+        select flow_id,user_id,role_id,sys_id,dep_id,menu_id,menu_parent_id,query,edit,export,impower,create_time
+        from b_permission
+        where menu_id = #{menuParentId}
+        <if test="roleId != null">and role_id = #{roleId}</if>
+        <if test="userId != null">and user_id = #{userId}</if>
+        <if test="depId != null">and dep_id = #{depId}</if>
     </select>
 </mapper>
