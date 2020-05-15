@@ -10,8 +10,8 @@
         value (#{sysId},#{depId},#{roleName})
     </insert>
     <insert id="insertMenuInfo">
-        insert into b_system_menu_tree (sys_id,menu_name,menu_level,menu_parent_id)
-        value (#{sysId},#{menuName},#{menuLevel},#{menuParentId})
+        insert into b_system_menu_tree (sys_id,menu_name,menu_level,path,component,icon,perms,menu_parent_id,order_num)
+        value (#{sysId},#{menuName},#{menuLevel},#{path},#{component},#{icon},#{perms},#{menuParentId},#{orderNum})
     </insert>
     <insert id="insertPermission">
         insert into b_permission (user_id,role_id,sys_id,dep_id,menu_id,menu_parent_id,query,edit,export,impower)
@@ -237,6 +237,7 @@
             create_time
         FROM
             b_system_menu_tree
+            where sys_id = #{sysId}
         order by order_num
     </select>
     <select id="selectRoleByUser" resultType="com.wy.sso.user.domain.RoleInfo">
@@ -272,6 +273,7 @@
             inner join b_permission p on r.flow_id = p.role_id
             inner join b_system_menu_tree m on m.flow_id = p.menu_id
         where
+            m.sys_id = #{sysId} and
             u.flow_id = #{userId} and p.QUERY = 1
         order by m.order_num
     </select>
@@ -282,5 +284,10 @@
         <if test="roleId != null">and role_id = #{roleId}</if>
         <if test="userId != null">and user_id = #{userId}</if>
         <if test="depId != null">and dep_id = #{depId}</if>
+    </select>
+    <select id="selectSystemIdBySystemName" resultType="java.lang.Integer">
+        select flow_id
+        from b_system
+        where sys_name = #{sysName}
     </select>
 </mapper>

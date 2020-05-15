@@ -12,7 +12,7 @@ public class DepartmentInfo {
     //db
     private Integer flowId;
     private String depName;
-    private String sysId;
+    private Integer sysId;
     private String createTime;
 
     public String getSysName() {
@@ -39,11 +39,11 @@ public class DepartmentInfo {
         this.depName = depName;
     }
 
-    public String getSysId() {
+    public Integer getSysId() {
         return sysId;
     }
 
-    public void setSysId(String sysId) {
+    public void setSysId(Integer sysId) {
         this.sysId = sysId;
     }
 

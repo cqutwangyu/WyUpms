@@ -227,12 +227,13 @@ public class SoftwareSysServiceImpl extends AbstractService implements SoftwareS
     }
 
     @Override
-    public Object getRouters() {
+    public Object getRouters(String sysName) {
+        Integer sysId = softwareSysDao.selectSystemIdBySystemName(sysName);
         List<MenuInfo> menuList;
         if (isAdmin()) {
-            menuList = softwareSysDao.selectAllMenu();
+            menuList = softwareSysDao.selectAllMenu(sysId);
         } else {
-            menuList = softwareSysDao.selectMenuByUser(currentUser().getFlowId());
+            menuList = softwareSysDao.selectMenuByUser(sysId, currentUser().getFlowId());
             int count = menuList.size();
             for (int i = 0; i < count; i++) {
                 MenuInfo parentMenu = menuList.get(i);
@@ -252,8 +253,8 @@ public class SoftwareSysServiceImpl extends AbstractService implements SoftwareS
     }
 
     @Override
-    public Object getAllMenu() {
-        List<MenuInfo> menuInfoList = softwareSysDao.selectAllMenu();
+    public Object getAllMenu(Integer sysId) {
+        List<MenuInfo> menuInfoList = softwareSysDao.selectAllMenu(sysId);
         return buildMenuTree(menuInfoList);
     }
 
@@ -269,14 +270,14 @@ public class SoftwareSysServiceImpl extends AbstractService implements SoftwareS
             routerVo.setMeta(new MetaVo(menu.getMenuName(), menu.getIcon()));
             routerVo.setName(menu.getPath());
             routerVo.setComponent(menu.getComponent());
-            routerVo.setPath(parentPath+menu.getPath());
+            routerVo.setPath(parentPath + menu.getPath());
             if (menu.getMenuLevel().equals(0)) {
                 routerVo.setAlwaysShow(true);
                 routerVo.setRedirect("noRedirect");
             } else {
                 routerVo.setAlwaysShow(false);
             }
-            routerVo.setChildren(buildRouters(menu.getChildren(),""));
+            routerVo.setChildren(buildRouters(menu.getChildren(), ""));
             routerVoList.add(routerVo);
         }
         return routerVoList;

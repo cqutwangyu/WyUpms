@@ -141,9 +141,9 @@ public class SoftwareSysController extends AbstractController {
      */
     @GetMapping("/menu/getAll")
     @ResponseBody
-    public Object getAll() {
+    public Object getAll(Integer sysId) {
         try {
-            return succeed(softwareSystemService.getAllMenu());
+            return succeed(softwareSystemService.getAllMenu(sysId));
         } catch (Exception e) {
             return failure(e);
         }
@@ -171,9 +171,12 @@ public class SoftwareSysController extends AbstractController {
      */
     @GetMapping("/getRouters")
     @ResponseBody
-    public Object getRouters( ) {
+    public Object getRouters(String sysName) throws Exception {
+        if(sysName==null){
+            throw new Exception("获取路由时系统名称不能为空");
+        }
         try {
-            return succeed(softwareSystemService.getRouters());
+            return succeed(softwareSystemService.getRouters(sysName));
         } catch (Exception e) {
             return failure(e);
         }

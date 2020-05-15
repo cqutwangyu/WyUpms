@@ -61,13 +61,13 @@ public interface SoftwareSysDao {
 
     List<PermissionInfo> selectChildPermissionByParams(PermissionInfo permissionInfo);
 
-    List<MenuInfo> selectAllMenu();
+    List<MenuInfo> selectAllMenu(Integer sysId);
 
     List<RoleInfo> selectRoleByUser(Integer userId);
 
     List<UserPermissionInfo> selectPermissionInfoByUser(Integer userId);
 
-    List<MenuInfo> selectMenuByUser(Integer userId);
+    List<MenuInfo> selectMenuByUser(Integer sysId,Integer userId);
 
     int updatePermissionByParams(Map<String, Object> params);
 
@@ -78,4 +78,6 @@ public interface SoftwareSysDao {
     int insertUserRoleInfo(UserRoleInfo userRoleInfo);
 
     int deleteUserRoleInfo(Integer flowId);
+
+    Integer selectSystemIdBySystemName(String sysName);
 }

@@ -133,11 +133,11 @@ public interface SoftwareSystemService {
      * 获取路由信息
      * @return
      */
-    Object getRouters();
+    Object getRouters(String sysName);
 
     /**
      * 获取所有菜单
      * @return
      */
-    Object getAllMenu();
+    Object getAllMenu(Integer sysId);
 }
