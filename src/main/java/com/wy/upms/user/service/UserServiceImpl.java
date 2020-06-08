@@ -7,6 +7,7 @@ import com.wy.sso.user.domain.RoleInfo;
 import com.wy.upms.system.domain.UserRoleInfo;
 import com.wy.upms.system.mapper.SoftwareSysDao;
 import com.wy.upms.user.mapper.UserDao;
+import com.wy.upms.utils.MD5Util;
 import com.wy.upms.utils.TokenUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -43,12 +44,14 @@ public class UserServiceImpl extends AbstractService implements UserService {
     @Override
     public Object register(UserInfo userInfo) throws Exception {
         UserInfo db_user = userDao.selectUserByName(userInfo.getUserName());
-        if(db_user!=null){
+        if (db_user != null) {
             throw new Exception("用户名或昵称已存在");
         }
+        //MD5加密
+        userInfo.setPassword(MD5Util.encode(userInfo.getPassword()));
         userDao.insertUser(userInfo);
         String roleIds = userInfo.getRoleIds();
-        if (roleIds != null) {
+        if (roleIds != null && !roleIds.equals("")) {
             String[] split = roleIds.split(",");
             for (String roleId : split) {
                 db_user = userDao.selectUserByName(userInfo.getUserName());
@@ -89,11 +92,11 @@ public class UserServiceImpl extends AbstractService implements UserService {
     public Object updateUserInfo(UserInfo userInfo) {
         int flag = userDao.updateUser(userInfo);
         String roleIds = userInfo.getRoleIds();
-        if (roleIds != null) {
+        if (roleIds != null && !roleIds.equals("")) {
             String[] split = roleIds.split(",");
             softwareSysDao.deleteUserRoleInfo(userInfo.getFlowId());
             for (String roleId : split) {
-                UserRoleInfo userRoleInfo = new UserRoleInfo(userInfo.getFlowId(),Integer.valueOf(roleId));
+                UserRoleInfo userRoleInfo = new UserRoleInfo(userInfo.getFlowId(), Integer.valueOf(roleId));
                 softwareSysDao.insertUserRoleInfo(userRoleInfo);
             }
         }

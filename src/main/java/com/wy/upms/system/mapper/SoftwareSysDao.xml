@@ -98,6 +98,7 @@
     <select id="selectAllRole" resultType="com.wy.sso.user.domain.RoleInfo">
         select r.flow_id,sys_id,dep_id,role_name,r.create_time,s.sys_name
         from b_role r inner join b_system s on r.sys_id = s.flow_id
+        where role_name not LIKE '超级管理员'
     </select>
     <select id="selectAllDepartment" resultType="com.wy.upms.system.domain.DepartmentInfo">
         select d.flow_id,sys_id,dep_name,d.create_time,s.sys_name
